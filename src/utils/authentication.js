@@ -3,7 +3,9 @@ const jwt = require("jsonwebtoken")
 const jwtSecret = process.env.JWT_SECRET
 
 const createToken = user => {
-  return jwt.sign({ id: user.id }, jwtSecret, { expiresIn: "1h" })
+  return jwt.sign({ ...user }, jwtSecret, {
+    expiresIn: "1h",
+  })
 }
 
 const verifyToken = token => {

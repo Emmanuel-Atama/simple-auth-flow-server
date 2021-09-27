@@ -1,5 +1,6 @@
 const prisma = require("../../utils/database")
 const bcrypt = require("bcrypt")
+const { createToken } = require("../../utils/authentication")
 
 const User = prisma.user
 
@@ -23,9 +24,15 @@ const signup = async (req, res) => {
       data: {
         ...userToCreate,
       },
+      select: {
+        id: true,
+        role: true,
+      },
     })
 
-    res.status(201).json({ user })
+    const token = createToken(user)
+
+    res.status(201).json({ token })
   } catch (error) {
     console.error("[ERROR] /signup route: ", error)
 
@@ -56,6 +63,11 @@ const signin = async (req, res) => {
       where: {
         email: userCredentials.email,
       },
+      select: {
+        id: true,
+        role: true,
+        password: true,
+      },
     })
 
     if (!user) {
@@ -70,7 +82,15 @@ const signin = async (req, res) => {
     const match = await bcrypt.compare(userCredentials.password, user.password)
 
     if (match) {
-      res.status(201).json({ user })
+      const userToTokenize = {
+        ...user,
+      }
+
+      delete userToTokenize.password
+
+      const token = createToken(userToTokenize)
+
+      res.status(201).json({ token })
     } else {
       res.status(401).json({ error: "Authentication failed." })
     }

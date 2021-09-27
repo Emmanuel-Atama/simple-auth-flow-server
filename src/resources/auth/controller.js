@@ -1,4 +1,5 @@
 const prisma = require("../../utils/database")
+const bcrypt = require("bcrypt")
 
 const User = prisma.user
 
@@ -12,6 +13,12 @@ const signup = async (req, res) => {
   }
 
   try {
+    const securePassword = await bcrypt.hash(userToCreate.password, 8)
+
+    userToCreate.password = securePassword
+
+    console.log("Inside signup: ", { securePassword })
+
     const user = await User.create({
       data: {
         ...userToCreate,
@@ -55,7 +62,14 @@ const signin = async (req, res) => {
       res.status(401).json({ error: "Authentication failed." })
     }
 
-    if (userCredentials.password === user.password) {
+    console.log("Inside signin, passwords: ", {
+      fromRes: userCredentials.password,
+      fromDb: user.password,
+    })
+
+    const match = await bcrypt.compare(userCredentials.password, user.password)
+
+    if (match) {
       res.status(201).json({ user })
     } else {
       res.status(401).json({ error: "Authentication failed." })

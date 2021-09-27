@@ -16,9 +16,17 @@ model User {
   email       String     @unique
   password    String
   role        Role      @default(USER)
+  posts       Post[]
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+model Post {
+  id          Int        @id @default(autoincrement())
+  body        String
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
 }

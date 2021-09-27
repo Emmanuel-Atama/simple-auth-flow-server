@@ -8,6 +8,7 @@ const app = express()
 
 const authRouter = require("./resources/auth/router")
 const userRouter = require("./resources/users/router")
+const postRouter = require("./resources/posts/router")
 const { protect, adminRoute } = require("./resources/auth/controller")
 
 /* SETUP MIDDLEWARE */
@@ -24,10 +25,10 @@ app.use(morgan("dev"))
 app.use("/", authRouter)
 
 /* For regular users only */
-app.use("/users", protect, userRouter)
+app.use("/posts", protect, postRouter)
 
 /* For admin users only */
-// app.use("/users", protect, adminRoute, userRouter)
+app.use("/users", protect, adminRoute, userRouter)
 
 app.get("*", (req, res) => {
   res.json({ ok: true })

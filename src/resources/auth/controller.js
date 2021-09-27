@@ -1,6 +1,6 @@
 const prisma = require("../../utils/database")
 const bcrypt = require("bcrypt")
-const { createToken } = require("../../utils/authentication")
+const { createToken, verifyToken } = require("../../utils/authentication")
 
 const User = prisma.user
 
@@ -100,11 +100,33 @@ const signin = async (req, res) => {
 }
 
 const protect = async (req, res, next) => {
-  const userId = req.headers.authorization
+  const bearer = req.headers.authorization
+
+  if (!bearer || !bearer.startsWith("Bearer ")) {
+    return res.status(401).end()
+  }
+
+  const token = bearer.split("Bearer ")[1].trim()
+
+  let payload = null
+
+  try {
+    payload = await verifyToken(token)
+  } catch (error) {
+    console.error({ error })
+
+    return res.status(401).end()
+  }
+
+  console.log("Inside protect: ", { bearer, payload })
 
   const user = await User.findUnique({
     where: {
-      id: parseInt(userId),
+      id: payload.id,
+    },
+    select: {
+      id: true,
+      role: true,
     },
   })
 
